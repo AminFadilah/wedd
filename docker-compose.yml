@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  nextapp:
+    build: .
+    container_name: nextapp
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql            # host = nama container mysql
+      DB_USER: root
+      DB_PASS: root
+      DB_NAME: evandb
+    networks:
+      - global-network
+
+networks:
+  global-network:
+    external: true

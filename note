@@ -1,0 +1,47 @@
+wedd/
+│
+├── app/
+│   ├── api/
+│   │   ├── guests/
+│   │   │   └── route.ts            ← GET/POST tamu (add, list)
+│   │   ├── upload-excel/
+│   │   │   └── route.ts            ← Upload Excel → insert ke DB
+│   │   ├── generate/
+│   │   │   └── route.ts            ← Generate kode otomatis
+│   │   └── attendance/
+│   │       └── route.ts            ← (Optional) untuk fitur kehadiran
+│   │
+│   ├── admin/                      ← Halaman admin
+│   │   ├── page.tsx                ← Dashboard admin
+│   │   ├── add/page.tsx            ← Form tambah manual tamu
+│   │   └── upload/page.tsx         ← Upload Excel
+│   │
+│   ├── general/
+│   │   └── page.tsx                ← Halaman undangan umum (tanpa nama)
+│   │
+│   ├── [code]/                     ← Halaman undangan personal
+│   │   └── page.tsx
+│   │
+│   ├── page.tsx                    ← Halaman cover utama
+│   └── globals.css                 ← Tailwind diimport di sini
+│
+├── lib/
+│   ├── db.ts                       ← Koneksi mysql2
+│   └── generateCode.ts             ← Fungsi generator kode unik
+│
+├── public/
+│   ├── images/                     ← Foto, background, dll
+│   │   └── hero.jpg
+│   ├── music/                      ← Musik backsound (opsional)
+│   └── favicon.ico
+│
+├── utils/
+│   └── excelParser.ts              ← Helper baca Excel
+│
+├── .env                            ← Config database
+├── next.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── tsconfig.json
+├── package.json
+└── README.md
