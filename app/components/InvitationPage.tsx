@@ -1,61 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import TrackImage from "./TrackImage";
+import CoverPage from "./CoverPage";
 import GuestRoles from "./GuestRoles";
 import EventSection from "./EventSection";
+import Gallery from "./Gallery";
 
-// ================= COVER PAGE ==================
-function Cover({
-  coupleName,
-  date,
-  onOpen,
-}: {
-  coupleName: string;
-  date: string;
-  onOpen: () => void;
-}) {
-  return (
-    <section
-      className="relative h-screen w-full flex items-center justify-center overflow-hidden
-      bg-gray-50 dark:bg-gray-900 p-6"
-    >
-      <span
-        className="absolute select-none opacity-10 font-extrabold text-gray-700 dark:text-gray-200
-  text-[35vw] sm:text-[30vw] md:text-[25vw] lg:text-[20vw]
-  leading-none tracking-tight text-center pointer-events-none whitespace-nowrap"
-        style={{
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-        }}
-      >
-        {coupleName}
-      </span>
-
-      {/* MAIN TEXT */}
-      <div className="relative text-center z-10">
-        <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white drop-shadow-md">
-          {coupleName}
-        </h1>
-
-        <p className="text-sm sm:text-lg text-gray-600 dark:text-gray-300 mt-3 tracking-wide">
-          {date}
-        </p>
-
-        {/* BUTTON */}
-        <button
-          onClick={onOpen}
-          className="mt-6 px-6 py-3 rounded-lg text-white font-medium 
-            bg-gradient-to-r from-gray-700 to-gray-900
-            hover:brightness-110 hover:scale-105 active:scale-95
-            transition-all duration-300 cursor-pointer shadow-xl"
-        >
-          Buka Undangan
-        </button>
-      </div>
-    </section>
-  );
-}
+type TabType = "acara" | "galery";
 
 export default function InvitationPage({
   name,
@@ -71,79 +23,103 @@ export default function InvitationPage({
   date: string;
 }) {
   const [showCover, setShowCover] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>("acara");
+
+  const tabs: { id: TabType; label: string }[] = [
+    { id: "acara", label: "Acara" },
+    { id: "galery", label: "Galery" },
+  ];
 
   return (
     <>
       {showCover ? (
-        <Cover
+        <CoverPage
           coupleName={coupleName}
           date={date}
+          guestName={name}
           onOpen={() => setShowCover(false)}
         />
       ) : (
-        <main
-          className="min-h-screen flex justify-center items-start p-5 sm:p-8 md:p-12
-          bg-gradient-to-b from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800"
-        >
-          <div
-            className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl
-            bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-300 dark:border-gray-700"
-          >
-            {/* HEADER */}
-            <div className="text-center px-6 py-10">
-              <h1
-                className="text-base sm:text-lg font-light tracking-[0.30em] uppercase 
-                text-gray-600 dark:text-gray-300"
-              >
-                Undangan Untuk
-              </h1>
+        <main className="min-h-screen flex justify-center items-start p-5 sm:p-10 bg-[var(--bg-primary)] pb-20">
+          <div className="w-full max-w-2xl rounded-2xl card overflow-hidden shadow-2xl">
+            {/* Header Hero */}
+            <div className="relative h-48 sm:h-56 bg-gradient-to-b from-[var(--grad-start)] to-[var(--grad-end)] overflow-hidden group">
+              <TrackImage
+                src="/images/dummy-venue-1.jpg"
+                alt="pernikahan"
+                width={1200}
+                height={600}
+                className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[var(--grad-start)]/60 to-[var(--grad-end)]/40"></div>
 
-              <h2
-                className="text-[30px] sm:text-[38px] md:text-[42px] font-bold mt-2
-                text-gray-900 dark:text-white drop-shadow-sm"
-              >
-                {name}
-              </h2>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+                <p className="uppercase text-xs tracking-[0.25em] text-[var(--text-secondary)] font-semibold">
+                  Undangan untuk
+                </p>
+                <h2 className="text-[32px] sm:text-[42px] font-bold mt-2 text-[var(--text-primary)] drop-shadow-lg">
+                  {name || "Anda"}
+                </h2>
+                <p className="mt-2 text-sm sm:text-base text-[var(--text-secondary)]">
+                  Kehadiran Anda sangat berarti bagi kami ✨
+                </p>
 
-              <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300 tracking-wide">
-                Kami berharap kehadiran Anda dapat menambah kebahagiaan di hari
-                spesial kami.
-              </p>
+                <div className="mt-4">
+                  <GuestRoles roles={roles} coupleName={coupleName} compact />
+                </div>
+              </div>
             </div>
 
-            {/* ROLES */}
-            {roles.length > 0 && (
-              <section className="px-6 pb-10 border-t border-gray-300/60 dark:border-gray-700/60">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                  Sebagai Tamu:
-                </h3>
-                {/* Tetap memakai komponen original */}
-                <GuestRoles roles={roles} />
-              </section>
-            )}
+            {/* Tabs */}
+            <div className="flex border-b border-[var(--border-line)] bg-[var(--bg-secondary)]">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 px-4 py-4 text-sm font-semibold transition-all duration-300 relative ${
+                    activeTab === tab.id
+                      ? "text-[var(--accent-warm)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent-warm)]" />
+                  )}
+                </button>
+              ))}
+            </div>
 
-            {/* EVENTS */}
-            {events.length > 0 && (
-              <section className="px-6 pb-12 border-t border-gray-300/60 dark:border-gray-700/60">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                  Rangkaian Acara:
-                </h3>
-                {/* Tetap memakai komponen original */}
-                <EventSection events={events} />
-              </section>
-            )}
+            {/* Content */}
+            <div className="px-6 py-8">
+              {activeTab === "acara" && events.length > 0 && (
+                <div className="animate-in">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                    Acara Pernikahan
+                  </h3>
+                  <EventSection events={events} />
+                </div>
+              )}
 
-            {/* FOOTER */}
-            <div className="text-center py-8 bg-white/60 dark:bg-gray-900/40 border-t dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Dengan hormat,
+              {activeTab === "galery" && (
+                <div className="animate-in">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                    Galery
+                  </h3>
+                  <Gallery />
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="text-center py-8 px-6 border-t border-[var(--border-line)] bg-[var(--bg-secondary)]">
+              <p className="text-sm text-[var(--text-secondary)]">
+                Dengan Cinta
               </p>
-
-              <p className="text-xl sm:text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+              <p className="text-xl sm:text-2xl font-bold mt-1 text-[var(--accent-warm)]">
                 {coupleName}
               </p>
-
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-xs mt-2 text-[var(--text-secondary)]">
                 {date}
               </p>
             </div>

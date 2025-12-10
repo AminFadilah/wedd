@@ -1,28 +1,58 @@
+"use client";
+
+import TrackImage from "./TrackImage";
+
 interface GuestRolesProps {
   roles: string[];
+  compact?: boolean;
+  coupleName?: string;
 }
 
-export default function GuestRoles({ roles }: GuestRolesProps) {
-  return (
-    <div className="mt-4 space-y-2 text-gray-700 dark:text-gray-200">
-      {roles.includes("couple") && (
-        <p className="text-base md:text-lg">
-          Kami — <span className="font-semibold">mempelai</span> — dengan senang
-          hati mengundang Anda.
-        </p>
-      )}
-      {roles.includes("evans_parent") && (
-        <p className="text-base md:text-lg">
-          Atas nama keluarga mempelai{" "}
-          <span className="font-semibold">pria</span>, kami mengundang Anda.
-        </p>
-      )}
-      {roles.includes("dzihni_parent") && (
-        <p className="text-base md:text-lg">
-          Atas nama keluarga mempelai{" "}
-          <span className="font-semibold">wanita</span>, kami mengundang Anda.
-        </p>
-      )}
-    </div>
-  );
+export default function GuestRoles({
+  roles,
+  compact = false,
+  coupleName,
+}: GuestRolesProps) {
+  const roleConfig = {
+    couple: {
+      label: "Mempelai",
+      message:
+        "Kami dengan senang hati mengundang Anda untuk merayakan momen spesial kami.",
+      image: "/images/dummy-couple.jpg",
+    },
+    evans_parent: {
+      label: "Keluarga Pria",
+      message:
+        "Atas nama keluarga mempelai pria, kami dengan hormat mengundang Anda untuk hadir di acara istimewa ini.",
+      image: "/images/dummy-family-1.jpg",
+    },
+    dzihni_parent: {
+      label: "Keluarga Wanita",
+      message:
+        "Atas nama keluarga mempelai wanita, kami dengan hormat mengundang Anda untuk merayakan hari bahagia kami.",
+      image: "/images/dummy-family-2.jpg",
+    },
+  };
+
+  if (compact) {
+    const inviterLabels = roles.map((role) => {
+      if (role === "couple" && coupleName) return coupleName;
+      return roleConfig[role as keyof typeof roleConfig]?.label ?? role;
+    });
+
+    return (
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        <span className="text-xs uppercase tracking-wider text-[var(--text-secondary)]">
+          Diundang oleh
+        </span>
+        <div className="inline-flex items-center gap-2 flex-wrap justify-center">
+          {inviterLabels.map((label, i) => (
+            <span key={i} className="badge">
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
 }

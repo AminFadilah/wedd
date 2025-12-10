@@ -16,7 +16,7 @@ export default async function Page() {
         roles={["couple"]}
         events={["akad", "resepsi"]}
         coupleName="Evan & Dzihni"
-        date="12 Desember 2025"
+        date="4 April 2026"
       />
     </div>
   );
