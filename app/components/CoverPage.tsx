@@ -106,12 +106,9 @@ export default function CoverPage({
         <div className="flex gap-4 flex-wrap justify-center">
           <button
             onClick={onOpen}
-            className="btn-primary text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300"
+            className="btn-primary text-base sm:text-lg shadow-sm hover:shadow-sm active:scale-95 transition-all duration-300"
           >
-            ▶ Buka Undangan
-          </button>
-          <button className="btn-secondary text-base sm:text-lg">
-            Pelajari Lebih Lanjut
+            Buka Undangan
           </button>
         </div>
       </div>

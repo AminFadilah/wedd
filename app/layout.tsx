@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import ClientToaster from "./ClientToaster";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,6 +22,9 @@ export default function RootLayout({
     <html lang="id" className="dark">
       <body className={`${inter.variable} antialiased`}>
         {children}
+
+        {/* Toaster dipisah sebagai client component */}
+        <ClientToaster />
       </body>
     </html>
   );

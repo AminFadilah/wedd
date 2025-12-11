@@ -78,13 +78,13 @@ export default function InvitationPage({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 px-4 py-4 text-sm font-semibold transition-all duration-300 relative ${
                     activeTab === tab.id
-                      ? "text-[var(--accent-warm)]"
+                      ? "text-[var(--accent-light)]"
                       : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent-warm)]" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent-light)]" />
                   )}
                 </button>
               ))}
@@ -116,7 +116,7 @@ export default function InvitationPage({
               <p className="text-sm text-[var(--text-secondary)]">
                 Dengan Cinta
               </p>
-              <p className="text-xl sm:text-2xl font-bold mt-1 text-[var(--accent-warm)]">
+              <p className="text-xl sm:text-2xl font-bold mt-1 ">
                 {coupleName}
               </p>
               <p className="text-xs mt-2 text-[var(--text-secondary)]">

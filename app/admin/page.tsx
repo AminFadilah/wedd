@@ -1,10 +1,8 @@
 "use client";
-import {
-  CheckIcon,
-  ClipboardDocumentIcon,
-  ClipboardIcon,
-} from "@heroicons/react/24/outline";
-import { useState, useEffect, FormEvent } from "react";
+
+import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+import { useState, useEffect, FormEvent, useRef } from "react";
+import toast from "react-hot-toast";
 
 interface Guest {
   id: number;
@@ -15,21 +13,36 @@ interface Guest {
 }
 
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"add" | "upload" | "list">("add");
+  const [activeTab, setActiveTab] = useState<"list" | "add" | "upload">("list");
+
   const [guests, setGuests] = useState<Guest[]>([]);
   const [copiedId, setCopiedId] = useState<number | null>(null);
-  const base = process.env.NEXT_PUBLIC_BASE_URL;
-  console.log("testbase", base);
-  // Fetch data dari API route /api/guests
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  const isSubmitting = useRef(false);
+
+  // ---------------- Fetch Data ----------------
+  const fetchGuests = async () => {
+    try {
+      const res = await fetch("/api/guests");
+      if (!res.ok) throw new Error("Fetch gagal");
+      const data = await res.json();
+      setGuests(data);
+    } catch {
+      toast.error("Gagal memuat tamu");
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "list") {
-      fetch("/api/guests")
-        .then((res) => res.json())
-        .then((data) => setGuests(data))
-        .catch(console.error);
+      fetchGuests();
     }
   }, [activeTab]);
 
+  // Helper
   const parseJsonArray = (value: string | string[]): string[] => {
     if (Array.isArray(value)) return value;
     try {
@@ -39,208 +52,383 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // ----------------- Add Guest -----------------
+  // ---------------- Add Guest ----------------
   const handleAddGuest = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const name = formData.get("name") as string;
-    const roles = (formData.get("roles") as string)
-      .split(",")
-      .map((r) => r.trim());
-    const events = (formData.get("events") as string)
-      .split(",")
-      .map((r) => r.trim());
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
 
-    // Panggil API untuk simpan data
+    const f = new FormData(e.currentTarget);
+    const name = (f.get("name") as string)?.trim();
+    const role = f.get("role") as string;
+
+    const events: string[] = [];
+    if (f.get("event_akad")) events.push("akad");
+    if (f.get("event_resepsi")) events.push("resepsi");
+
+    if (!name || !role || events.length === 0) {
+      toast.error("Semua field wajib diisi.");
+      isSubmitting.current = false;
+      return;
+    }
+
     try {
       const res = await fetch("/api/guests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, roles, events }),
+        body: JSON.stringify({ name, roles: [role], events }),
       });
-      if (!res.ok) throw new Error("Gagal menambahkan tamu");
-      alert("Tamu berhasil ditambahkan!");
-      form.reset();
-    } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat menambahkan tamu");
+
+      if (!res.ok) throw new Error();
+
+      toast.success("Tamu berhasil ditambahkan!");
+      e.currentTarget.reset();
+
+      // refresh list kalau sedang di tab list
+      if (activeTab === "list") fetchGuests();
+    } catch {
+      toast.error("Gagal menambahkan tamu.");
+    } finally {
+      isSubmitting.current = false;
     }
   };
 
-  // ----------------- Upload Excel -----------------
+  // ---------------- Upload Excel ----------------
   const handleUploadExcel = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const fileInput = form.querySelector(
-      'input[type="file"]'
+    const fileInput = e.currentTarget.querySelector(
+      "input[type=file]"
     ) as HTMLInputElement;
-    if (!fileInput.files || fileInput.files.length === 0)
-      return alert("Pilih file terlebih dahulu");
 
-    const file = fileInput.files[0];
+    if (!fileInput.files?.length) {
+      toast.error("Pilih file terlebih dahulu");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", fileInput.files[0]);
 
     try {
       const res = await fetch("/api/upload-excel", {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Upload gagal");
-      alert("Excel berhasil diupload!");
-      form.reset();
-    } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat upload Excel");
+
+      if (!res.ok) throw new Error();
+      toast.success("Upload Excel berhasil!");
+      fileInput.value = "";
+      // refresh list kalau sedang di tab list
+      if (activeTab === "list") fetchGuests();
+    } catch {
+      toast.error("Gagal upload file Excel.");
     }
   };
 
-  return (
-    <main className="min-h-screen p-8 bg-gray-900 text-gray-100">
-      <div className="max-w-5xl mx-auto bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-        <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+  // ---------------- Summary ----------------
+  const totalTamu = guests.length;
+  const tamuAkad = guests.filter((g) =>
+    parseJsonArray(g.events).includes("akad")
+  ).length;
+  const tamuResepsi = guests.filter((g) =>
+    parseJsonArray(g.events).includes("resepsi")
+  ).length;
+  const tamuKeduanya = guests.filter((g) => {
+    const ev = parseJsonArray(g.events);
+    return ev.includes("akad") && ev.includes("resepsi");
+  }).length;
 
-        {/* Tab Navigation */}
+  // ---------------- Search + Pagination ----------------
+  const filtered = guests.filter((g) =>
+    g.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+  return (
+    <main
+      className="min-h-screen p-8"
+      style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}
+    >
+      <div
+        className="max-w-5xl mx-auto p-4 rounded-xl"
+        style={{
+          background: "var(--bg-secondary)",
+          border: "1px solid var(--border-line)",
+        }}
+      >
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card title="Total Tamu" value={totalTamu} color="var(--accent-light)" />
+          <Card title="Tamu Akad" value={tamuAkad} color="#ffb3c6" />
+          <Card title="Tamu Resepsi" value={tamuResepsi} color="#cdb4db" />
+          <Card title="Hadir Keduanya" value={tamuKeduanya} color="var(--accent-1)" />
+        </div>
+
+        {/* Tabs */}
         <div className="flex space-x-2 mb-6">
-          {["add", "upload", "list"].map((tab) => (
+          {[
+            { key: "list", label: "Daftar Tamu", color: "#cdb4db" },
+            { key: "add", label: "Tambah Tamu", color: "var(--accent-1)" },
+            { key: "upload", label: "Upload Excel", color: "#a0c4ff" },
+          ].map((tab) => (
             <button
-              key={tab}
-              className={`px-4 py-2 rounded ${
-                activeTab === tab
-                  ? "bg-gray-700"
-                  : "bg-gray-800 hover:bg-gray-700"
-              } transition-colors`}
-              onClick={() => setActiveTab(tab as "add" | "upload" | "list")}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className="px-4 py-2 rounded-lg active:scale-95"
+              style={{
+                background:
+                  activeTab === tab.key ? tab.color : "var(--accent-2)",
+                border: "1px solid var(--border-line)",
+                color: activeTab === tab.key ? "#000" : "var(--text-primary)",
+              }}
             >
-              {tab === "add"
-                ? "Tambah Tamu Manual"
-                : tab === "upload"
-                ? "Upload Excel"
-                : "Lihat Semua Tamu"}
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Tab Content */}
-        <div>
-          {activeTab === "add" && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Tambah Tamu Manual</h2>
-              <form className="space-y-4" onSubmit={handleAddGuest}>
-                <input
-                  name="name"
-                  type="text"
-                  placeholder="Nama"
-                  className="w-full p-2 rounded bg-gray-900 border border-gray-700"
-                />
-                <input
-                  name="roles"
-                  type="text"
-                  placeholder="Roles (pisahkan dengan koma)"
-                  className="w-full p-2 rounded bg-gray-900 border border-gray-700"
-                />
-                <input
-                  name="events"
-                  type="text"
-                  placeholder="Events (pisahkan dengan koma)"
-                  className="w-full p-2 rounded bg-gray-900 border border-gray-700"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 transition-colors"
-                >
-                  Simpan
-                </button>
-              </form>
-            </div>
-          )}
-          {activeTab === "upload" && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Upload Excel</h2>
-              <form className="space-y-4" onSubmit={handleUploadExcel}>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  className="w-full p-2 rounded bg-gray-900 border border-gray-700"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 transition-colors"
-                >
-                  Upload
-                </button>
-              </form>
-            </div>
-          )}
+        {/* ===================== CONTENT ===================== */}
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: "var(--bg-secondary)",
+            border: "1px solid var(--border-line)",
+          }}
+        >
+          {/* ---------------- LIST ---------------- */}
           {activeTab === "list" && (
-            <div className="overflow-x-auto relative">
-              <h2 className="text-xl font-semibold mb-4">Daftar Tamu</h2>
-              <table className="w-full border border-gray-700">
-                <thead>
-                  <tr className="bg-gray-800 text-white">
-                    <th className="p-2 border border-gray-700">Nama</th>
-                    <th className="p-2 border border-gray-700">Roles</th>
-                    <th className="p-2 border border-gray-700">Events</th>
-                    <th className="p-2 border border-gray-700 text-right">
-                      Link & Copy
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {guests.map((g) => {
-                    const base = process.env.NEXT_PUBLIC_BASE_URL;
-                    const encodedName = encodeURIComponent(g.name);
-                    const fullLink = `${base}/${encodedName}/${g.code}`;
+            <>
+              <input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Cari nama..."
+                className="mb-4 w-full p-2 rounded"
+                style={{
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-line)",
+                }}
+              />
 
-                    const isCopied = copiedId === g.id;
+              <GuestTable
+                guests={paginated}
+                parseJsonArray={parseJsonArray}
+                copiedId={copiedId}
+                setCopiedId={setCopiedId}
+              />
 
-                    const handleCopy = () => {
-                      navigator.clipboard.writeText(fullLink);
-                      setCopiedId(g.id);
-                      setTimeout(() => setCopiedId(null), 1500);
-                    };
+              <Pagination page={page} setPage={setPage} totalPages={totalPages} />
+            </>
+          )}
 
-                    return (
-                      <tr key={g.id} className="bg-gray-900">
-                        <td className="p-2 border border-gray-700">{g.name}</td>
-                        <td className="p-2 border border-gray-700">
-                          {parseJsonArray(g.roles).join(", ")}
-                        </td>
-                        <td className="p-2 border border-gray-700">
-                          {parseJsonArray(g.events).join(", ")}
-                        </td>
+          {/* ---------------- ADD ---------------- */}
+          {activeTab === "add" && (
+            <form className="space-y-4" onSubmit={handleAddGuest}>
+              <input
+                name="name"
+                placeholder="Nama"
+                className="w-full p-2 rounded"
+                style={{
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-line)",
+                }}
+              />
 
-                        <td className="p-2 border border-gray-700 flex items-center justify-between gap-3">
-                          <a
-                            href={`/${encodedName}/${g.code}`}
-                            className="text-blue-400 hover:underline"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {fullLink}
-                          </a>
+              {/* Role */}
+              <select
+                name="role"
+                className="w-full p-2 rounded"
+                style={{
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-line)",
+                }}
+              >
+                <option value="">Pilih Role</option>
+                <option value="couple">Couple</option>
+                <option value="evans_parent">Evans Parent</option>
+                <option value="dzihni_parent">Dzihni Parent</option>
+              </select>
 
-                          <button
-                            onClick={handleCopy}
-                            className="p-1 rounded hover:bg-gray-700 transition"
-                          >
-                            {isCopied ? (
-                              <CheckIcon className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <ClipboardIcon className="w-5 h-5 text-gray-300" />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+              {/* Events */}
+              <div className="space-y-2">
+                <label className="block font-medium">Pilih Event:</label>
+
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="event_akad" />
+                  Akad
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="event_resepsi" />
+                  Resepsi
+                </label>
+              </div>
+
+              <button
+                className="px-4 py-2 rounded active:scale-95"
+                style={{
+                  background: "var(--accent-1)",
+                  color: "var(--text-primary)",
+                }}
+              >
+                Simpan
+              </button>
+            </form>
+          )}
+
+          {/* ---------------- UPLOAD ---------------- */}
+          {activeTab === "upload" && (
+            <form className="space-y-4" onSubmit={handleUploadExcel}>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                className="w-full p-2 rounded"
+                style={{
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-line)",
+                }}
+              />
+
+              <button
+                className="px-4 py-2 rounded active:scale-95"
+                style={{
+                  background: "#a0c4ff",
+                  color: "black",
+                }}
+              >
+                Upload
+              </button>
+            </form>
           )}
         </div>
       </div>
     </main>
+  );
+}
+
+/* ---------------- COMPONENTS ---------------- */
+function Card({ title, value, color }: any) {
+  return (
+    <div
+      className="p-4 rounded-xl shadow flex flex-col"
+      style={{
+        background: "var(--accent-2)",
+        border: "1px solid var(--border-line)",
+      }}
+    >
+      <span style={{ color: "var(--text-secondary)" }}>{title}</span>
+      <span className="text-3xl font-bold" style={{ color }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function GuestTable({ guests, parseJsonArray, copiedId, setCopiedId }: any) {
+  return (
+    <div className="overflow-x-auto">
+      <table
+        className="w-full"
+        style={{ border: "1px solid var(--border-line)" }}
+      >
+        <thead>
+          <tr style={{ background: "var(--accent-2)" }}>
+            <th className="p-2">Nama</th>
+            <th className="p-2">Roles</th>
+            <th className="p-2">Events</th>
+            <th className="p-2 text-right">Link & Copy</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {guests.map((g: any) => {
+            const encodedName = encodeURIComponent(g.name);
+            const fullLink = `${process.env.NEXT_PUBLIC_BASE_URL}/${encodedName}/${g.code}`;
+            const isCopied = copiedId === g.id;
+
+            return (
+              <tr key={g.id} style={{ background: "var(--bg-primary)" }}>
+                <td className="p-2">{g.name}</td>
+                <td className="p-2">{parseJsonArray(g.roles).join(", ")}</td>
+                <td className="p-2">{parseJsonArray(g.events).join(", ")}</td>
+
+                <td className="p-2 flex items-center justify-between">
+                  <a
+                    href={fullLink}
+                    target="_blank"
+                    className="hover:underline"
+                    style={{ color: "#a0c4ff" }}
+                  >
+                    {fullLink}
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(fullLink);
+                      setCopiedId(g.id);
+                      setTimeout(() => setCopiedId(null), 1500);
+                    }}
+                    className="p-1 rounded active:scale-95"
+                    style={{
+                      background: "var(--accent-2)",
+                      border: "1px solid var(--border-line)",
+                    }}
+                  >
+                    {isCopied ? (
+                      <CheckIcon
+                        className="w-5 h-5"
+                        style={{ color: "var(--accent-light)" }}
+                      />
+                    ) : (
+                      <ClipboardIcon
+                        className="w-5 h-5"
+                        style={{ color: "var(--text-primary)" }}
+                      />
+                    )}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Pagination({ page, setPage, totalPages }: any) {
+  return (
+    <div className="flex justify-between items-center mt-4">
+      <button
+        disabled={page <= 1}
+        onClick={() => setPage((p: number) => p - 1)}
+        className="px-3 py-1 rounded disabled:opacity-30 active:scale-95"
+        style={{
+          background: "var(--accent-2)",
+          border: "1px solid var(--border-line)",
+        }}
+      >
+        Prev
+      </button>
+
+      <span style={{ color: "var(--text-secondary)" }}>
+        Page {page} / {totalPages || 1}
+      </span>
+
+      <button
+        disabled={page >= totalPages}
+        onClick={() => setPage((p: number) => p + 1)}
+        className="px-3 py-1 rounded disabled:opacity-30 active:scale-95"
+        style={{
+          background: "var(--accent-2)",
+          border: "1px solid var(--border-line)",
+        }}
+      >
+        Next
+      </button>
+    </div>
   );
 }

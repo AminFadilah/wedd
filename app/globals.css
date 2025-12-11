@@ -2,30 +2,33 @@
 
 /* ---------- New Luxury Color Palette (Rose Gold + Deep Purple) ---------- */
 :root {
-  /* Backgrounds */
-  --bg-primary: #050308;
-  --bg-secondary: #0b0710;
-  --bg-hover: rgba(255, 182, 193, 0.02);
+  /* Backgrounds — dibuat lebih gelap */
+  --bg-primary: #0f1a23;     /* very dark blue navy */
+  --bg-secondary: #15232e;   /* slightly lighter dark blue */
+  --bg-hover: rgba(69, 104, 130, 0.08); /* subtle steel-blue hover */
 
-  /* Text */
-  --text-primary: #fbf9f8;
-  --text-secondary: #b99fb3; /* muted rose-beige */
-  --text-muted: #8b7a70; /* darker muted */
+  /* Text — high contrast */
+  --text-primary: #e3e3e3;   /* light grey */
+  --text-secondary: #9bb4c9; /* softened steel blue */
+  --text-muted: #6b8598;     /* muted blue-grey */
 
-  /* Accents & Borders */
-  --border-line: rgba(232, 178, 178, 0.08);
-  --accent-rose: #e8b2b2; /* soft rose gold */
-  --accent-dark: #d4727a; /* deeper rose */
-  --accent-light: #f5dcd8; /* cream-rose */
-  --purple-accent: #7d5a7d; /* deep purple accent */
-  --accent-1: #d9a3d1; /* muted amethyst */
-  --accent-2: #7b3f63;
+  /* Accents & Borders — deepened but consistent */
+  --border-line: rgba(227, 227, 227, 0.08);
 
-  /* new gradient variables */
-  --grad-start: #2b0f2e; /* smoky amethyst */
-  --grad-end: #0a0710; /* deep charcoal */
-  --grad-overlay-alpha: rgba(43, 15, 46, 0.16); /* overlay intensity */
+  --accent-rose: #3c5872;    /* repurposed: deep steel blue */
+  --accent-dark: #263a4a;    /* darker blue, shading */
+  --accent-light: #d5dfe6;   /* very soft light blue */
+  --purple-accent: #1b3c53;  /* original palette main dark */
+  --accent-1: #2c4a63;       /* medium dark steel blue */
+  --accent-2: #182c3a;       /* strongest dark accent */
+
+  /* Gradients — full dark tone */
+  --grad-start: #0d161e;     /* deep navy-black */
+  --grad-end: #15232e;       /* complementary dark */
+  --grad-overlay-alpha: rgba(21, 35, 46, 0.22);
 }
+
+
 
 /* Typography base (kept existing) */
 body {
