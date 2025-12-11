@@ -1,6 +1,20 @@
 version: "3.8"
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - global-network
+
   nextapp:
     build: .
     container_name: nextapp
@@ -8,12 +22,19 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DB_HOST: mysql            # host = nama container mysql
-      DB_USER: root
-      DB_PASS: root
-      DB_NAME: evandb
+      DATABASE_HOST: mysql             # host = nama container mysql
+      DATABASE_PORT: 3306
+      DATABASE_USER: root
+      DATABASE_PASSWORD: root
+      DATABASE_NAME: test
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+    depends_on:
+      - mysql
     networks:
       - global-network
+
+volumes:
+  mysql_data:
 
 networks:
   global-network:
