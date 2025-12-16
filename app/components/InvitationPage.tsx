@@ -43,7 +43,7 @@ export default function InvitationPage({
         <main className="min-h-screen flex justify-center items-start p-5 sm:p-10 bg-[var(--bg-primary)] pb-20">
           <div className="w-full max-w-2xl rounded-2xl card overflow-hidden shadow-2xl">
             {/* Header Hero */}
-            <div className="relative h-48 sm:h-56 bg-gradient-to-b from-[var(--grad-start)] to-[var(--grad-end)] overflow-hidden group">
+            <div className="relative h-70 sm:h-[70vh] bg-gradient-to-b from-[var(--grad-start)] to-[var(--grad-end)] overflow-hidden group ">
               <TrackImage
                 src="/images/dummy-venue-1.jpg"
                 alt="pernikahan"

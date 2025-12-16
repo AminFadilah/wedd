@@ -23,6 +23,7 @@ export default function AdminDashboardPage() {
   const PAGE_SIZE = 10;
 
   const isSubmitting = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // ---------------- Fetch Data ----------------
   const fetchGuests = async () => {
@@ -82,12 +83,16 @@ export default function AdminDashboardPage() {
       if (!res.ok) throw new Error();
 
       toast.success("Tamu berhasil ditambahkan!");
-      e.currentTarget.reset();
+      formRef.current?.reset();
 
-      // refresh list kalau sedang di tab list
-      if (activeTab === "list") fetchGuests();
+      setActiveTab("list");
+
+      setSearch("");
+      setPage(1);
+
+      fetchGuests();
     } catch {
-      toast.error("Gagal menambahkan tamu.");
+      toast.error("Gagal menambahkan tamu");
     } finally {
       isSubmitting.current = false;
     }
@@ -126,12 +131,16 @@ export default function AdminDashboardPage() {
 
   // ---------------- Summary ----------------
   const totalTamu = guests.length;
-  const tamuAkad = guests.filter((g) =>
-    parseJsonArray(g.events).includes("akad")
-  ).length;
-  const tamuResepsi = guests.filter((g) =>
-    parseJsonArray(g.events).includes("resepsi")
-  ).length;
+  const tamuAkad = guests.filter((g) => {
+    const ev = parseJsonArray(g.events);
+    return ev.includes("akad") && !ev.includes("resepsi");
+  }).length;
+
+  const tamuResepsi = guests.filter((g) => {
+    const ev = parseJsonArray(g.events);
+    return ev.includes("resepsi") && !ev.includes("akad");
+  }).length;
+
   const tamuKeduanya = guests.filter((g) => {
     const ev = parseJsonArray(g.events);
     return ev.includes("akad") && ev.includes("resepsi");
@@ -159,10 +168,18 @@ export default function AdminDashboardPage() {
       >
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card title="Total Tamu" value={totalTamu} color="var(--accent-light)" />
+          <Card
+            title="Total Tamu"
+            value={totalTamu}
+            color="var(--accent-light)"
+          />
           <Card title="Tamu Akad" value={tamuAkad} color="#ffb3c6" />
           <Card title="Tamu Resepsi" value={tamuResepsi} color="#cdb4db" />
-          <Card title="Hadir Keduanya" value={tamuKeduanya} color="var(--accent-1)" />
+          <Card
+            title="Hadir Keduanya"
+            value={tamuKeduanya}
+            color="var(--accent-1)"
+          />
         </div>
 
         {/* Tabs */}
@@ -187,8 +204,6 @@ export default function AdminDashboardPage() {
             </button>
           ))}
         </div>
-
-        {/* ===================== CONTENT ===================== */}
         <div
           className="p-6 rounded-xl"
           style={{
@@ -196,7 +211,6 @@ export default function AdminDashboardPage() {
             border: "1px solid var(--border-line)",
           }}
         >
-          {/* ---------------- LIST ---------------- */}
           {activeTab === "list" && (
             <>
               <input
@@ -212,21 +226,23 @@ export default function AdminDashboardPage() {
                   border: "1px solid var(--border-line)",
                 }}
               />
-
               <GuestTable
                 guests={paginated}
                 parseJsonArray={parseJsonArray}
                 copiedId={copiedId}
                 setCopiedId={setCopiedId}
               />
-
-              <Pagination page={page} setPage={setPage} totalPages={totalPages} />
+              <Pagination
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+              />
             </>
           )}
 
           {/* ---------------- ADD ---------------- */}
           {activeTab === "add" && (
-            <form className="space-y-4" onSubmit={handleAddGuest}>
+            <form ref={formRef} className="space-y-4" onSubmit={handleAddGuest}>
               <input
                 name="name"
                 placeholder="Nama"
