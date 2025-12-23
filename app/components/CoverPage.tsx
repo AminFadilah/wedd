@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useLayoutEffect } from "react";
+import gsap from "gsap";
 import TrackImage from "./TrackImage";
 
 interface CoverProps {
@@ -15,14 +17,33 @@ export default function CoverPage({
   date,
   guestName,
 }: CoverProps) {
+useLayoutEffect(() => {
+  const elements = gsap.utils.toArray(".cover-content > *");
+
+  gsap.fromTo(
+    elements,
+    {
+      opacity: 0,
+      y: 24,
+    },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      ease: "power3.out",
+      stagger: 0.12,
+      clearProps: "transform",
+    }
+  );
+}, []);
   return (
-    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[var(--bg-primary)] select-none">
+    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-rose-950 select-none">
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--grad-start)]/6 via-[var(--grad-end)]/6 to-[var(--bg-primary)] opacity-80"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-rose-900/80 via-rose-800/50 to-rose-950" />
 
       {/* Background images */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-32 h-32 sm:w-40 sm:h-40 rounded-lg shadow-2xl transform -rotate-12 opacity-60 hover:opacity-100 transition-opacity">
+        <div className="absolute top-10 left-10 w-32 h-32 sm:w-40 sm:h-40 rounded-lg shadow-2xl -rotate-12 opacity-40">
           <TrackImage
             src="/images/dummy-couple.jpg"
             alt="pasangan"
@@ -32,7 +53,7 @@ export default function CoverPage({
           />
         </div>
 
-        <div className="absolute top-20 right-10 w-28 h-28 sm:w-36 sm:h-36 rounded-lg shadow-2xl transform rotate-6 opacity-50 hover:opacity-100 transition-opacity">
+        <div className="absolute top-20 right-10 w-28 h-28 sm:w-36 sm:h-36 rounded-lg shadow-2xl rotate-6 opacity-35">
           <TrackImage
             src="/images/dummy-venue-1.jpg"
             alt="pernikahan"
@@ -42,7 +63,7 @@ export default function CoverPage({
           />
         </div>
 
-        <div className="absolute bottom-10 left-20 w-24 h-24 sm:w-32 sm:h-32 rounded-lg shadow-2xl transform rotate-12 opacity-40 hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-10 left-20 w-24 h-24 sm:w-32 sm:h-32 rounded-lg shadow-2xl rotate-12 opacity-30">
           <TrackImage
             src="/images/dummy-family-1.jpg"
             alt="perayaan"
@@ -52,7 +73,7 @@ export default function CoverPage({
           />
         </div>
 
-        <div className="absolute bottom-20 right-10 w-36 h-36 sm:w-44 sm:h-44 rounded-lg shadow-2xl transform -rotate-6 opacity-70 hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-20 right-10 w-36 h-36 sm:w-44 sm:h-44 rounded-lg shadow-2xl -rotate-6 opacity-45">
           <TrackImage
             src="/images/dummy-venue-2.jpg"
             alt="cincin pernikahan"
@@ -64,53 +85,48 @@ export default function CoverPage({
       </div>
 
       {/* Background text */}
-      <div
-        className="absolute opacity-[0.03] font-extrabold text-[18vw] leading-none uppercase text-[var(--accent-warm)]"
-        style={{
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {coupleName.replace(" ", " & ")}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.1] font-extrabold text-[16vw] leading-none overflow-auto whitespace-nowrap uppercase text-rose-50">
+        {coupleName.replace(" ", "\n")}
       </div>
 
       {/* Main content */}
-      <div className="relative text-center z-10 flex flex-col items-center px-4 max-w-3xl">
+      <div className="cover-content relative z-10 text-center flex flex-col items-center px-4 max-w-3xl">
         {guestName && (
-          <p className="text-[var(--accent-warm)] text-sm sm:text-base tracking-[0.2em] uppercase mb-3 font-semibold">
-            Yth. {guestName}
+          <p className="text-rose-50 text-xl tracking-[0.2em] uppercase mb-3 font-bold">
+             {guestName}
           </p>
         )}
 
-        <p className="text-[var(--text-secondary)] text-sm sm:text-base tracking-[0.3em] uppercase mb-4">
+        <p className="text-rose-100 text-sm tracking-[0.3em] uppercase mb-4">
           Dengan senang hati mengundang Anda merayakan
         </p>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold drop-shadow-2xl text-[var(--text-primary)] mb-2">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold drop-shadow-2xl text-neutral-50 mb-2">
           {coupleName}
         </h1>
 
-        <div className="w-12 h-1 bg-[var(--accent-warm)] rounded-full mb-6"></div>
+        <div className="w-12 h-1 bg-rose-500 rounded-full mb-6" />
 
-        <p className="text-base sm:text-lg md:text-xl text-[var(--text-secondary)] tracking-widest mb-2">
-          {date}
+        <p className="text-lg text-rose-100 tracking-widest mb-2">{date}</p>
+
+        <p className="text-sm text-rose-200 max-w-lg mb-8">
+          Kami mengundang Anda untuk hadir dan berbagi kebahagiaan di hari
+          istimewa kami.
         </p>
 
-        <p className="text-sm text-[var(--text-secondary)] max-w-lg mb-8">
-          Bergabunglah dengan kami untuk merayakan momen indah dalam perjalanan
-          cinta kami
-        </p>
-
-        <div className="flex gap-4 flex-wrap justify-center">
-          <button
-            onClick={onOpen}
-            className="btn-primary text-base sm:text-lg shadow-sm hover:shadow-sm active:scale-95 transition-all duration-300"
-          >
-            Buka Undangan
-          </button>
-        </div>
+        <button
+          onClick={onOpen}
+          className="
+            px-6 py-3 rounded-lg
+            bg-rose-600 text-white
+            text-lg font-medium
+            hover:bg-rose-500
+            shadow-lg shadow-rose-950/40
+            transition-all active:scale-95
+          "
+        >
+          Buka Undangan
+        </button>
       </div>
     </section>
   );

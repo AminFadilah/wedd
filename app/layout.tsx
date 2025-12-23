@@ -4,7 +4,6 @@ import ClientToaster from "./ClientToaster";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-main",
   weight: ["300", "400", "500", "600", "700"],
 });
 
@@ -20,10 +19,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.className} antialiased`}>
         {children}
-
-        {/* Toaster dipisah sebagai client component */}
         <ClientToaster />
       </body>
     </html>

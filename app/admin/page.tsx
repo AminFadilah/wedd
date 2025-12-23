@@ -1,7 +1,14 @@
 "use client";
 
-import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
-import { useState, useEffect, FormEvent, useRef } from "react";
+import {
+  ArrowPathRoundedSquareIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  CheckIcon,
+  ClipboardIcon,
+  UserGroupIcon,
+} from "@heroicons/react/24/outline";
+import { useState, useEffect, FormEvent, useRef, ReactNode } from "react";
 import toast from "react-hot-toast";
 
 interface Guest {
@@ -155,62 +162,87 @@ export default function AdminDashboardPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   return (
-    <main
-      className="min-h-screen p-8"
-      style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}
-    >
-      <div
-        className="max-w-5xl mx-auto p-4 rounded-xl"
-        style={{
-          background: "var(--bg-secondary)",
-          border: "1px solid var(--border-line)",
-        }}
-      >
-        {/* Summary Cards */}
+    <div className="min-h-screen bg-neutral-100 p-8">
+      <div className="max-w-5xl mx-auto p-4 rounded-xl">
+        <div className="mb-3 text-3xl text-neutral-800">Wedding Invitation Dashboard</div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card
             title="Total Tamu"
             value={totalTamu}
-            color="var(--accent-light)"
+            valueClass="text-sky-600"
+            icon={<UserGroupIcon className="w-6 h-6" />}
+            iconColor="text-sky-600"
+            iconBg="bg-sky-100"
           />
-          <Card title="Tamu Akad" value={tamuAkad} color="#ffb3c6" />
-          <Card title="Tamu Resepsi" value={tamuResepsi} color="#cdb4db" />
+          <Card
+            title="Tamu Akad"
+            value={tamuAkad}
+            valueClass="text-emerald-600"
+            icon={<CalendarIcon className="w-6 h-6" />}
+            iconColor="text-emerald-600"
+            iconBg="bg-emerald-100"
+          />
+          <Card
+            title="Tamu Resepsi"
+            value={tamuResepsi}
+            valueClass="text-amber-500"
+            icon={<CalendarDaysIcon className="w-6 h-6" />}
+            iconColor="text-amber-600"
+            iconBg="bg-amber-100"
+          />
           <Card
             title="Hadir Keduanya"
             value={tamuKeduanya}
-            color="var(--accent-1)"
+            valueClass="text-rose-500"
+            icon={<ArrowPathRoundedSquareIcon className="w-6 h-6" />}
+            iconColor="text-rose-600"
+            iconBg="bg-rose-100"
           />
         </div>
+        <div className="bg-neutral-50 p-6 rounded-xl shadow space-y-6">
+          <div className="flex space-x-2 mb-6">
+            {[
+              {
+                key: "list",
+                label: "Daftar Tamu",
+                activeBg: "bg-indigo-100",
+                activeText: "text-indigo-700",
+              },
+              {
+                key: "add",
+                label: "Tambah Tamu",
+                activeBg: "bg-emerald-100",
+                activeText: "text-emerald-700",
+              },
+              {
+                key: "upload",
+                label: "Upload Excel",
+                activeBg: "bg-sky-100",
+                activeText: "text-sky-700",
+              },
+            ].map((tab) => {
+              const isActive = activeTab === tab.key;
 
-        {/* Tabs */}
-        <div className="flex space-x-2 mb-6">
-          {[
-            { key: "list", label: "Daftar Tamu", color: "#cdb4db" },
-            { key: "add", label: "Tambah Tamu", color: "var(--accent-1)" },
-            { key: "upload", label: "Upload Excel", color: "#a0c4ff" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              className="px-4 py-2 rounded-lg active:scale-95"
-              style={{
-                background:
-                  activeTab === tab.key ? tab.color : "var(--accent-2)",
-                border: "1px solid var(--border-line)",
-                color: activeTab === tab.key ? "#000" : "var(--text-primary)",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div
-          className="p-6 rounded-xl"
-          style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border-line)",
-          }}
-        >
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`
+          px-4 py-2 rounded-lg border text-sm font-medium
+          transition-all active:scale-95
+          ${
+            isActive
+              ? `${tab.activeBg} ${tab.activeText} border-transparent`
+              : "bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100"
+          }
+        `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
           {activeTab === "list" && (
             <>
               <input
@@ -220,18 +252,22 @@ export default function AdminDashboardPage() {
                   setPage(1);
                 }}
                 placeholder="Cari nama..."
-                className="mb-4 w-full p-2 rounded"
-                style={{
-                  background: "var(--bg-primary)",
-                  border: "1px solid var(--border-line)",
-                }}
+                className="
+          mb-4 w-full p-2 rounded-lg
+          bg-white border border-neutral-200
+          text-sm text-neutral-700
+          placeholder:text-neutral-400
+          focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300
+        "
               />
+
               <GuestTable
                 guests={paginated}
                 parseJsonArray={parseJsonArray}
                 copiedId={copiedId}
                 setCopiedId={setCopiedId}
               />
+
               <Pagination
                 page={page}
                 setPage={setPage}
@@ -240,27 +276,30 @@ export default function AdminDashboardPage() {
             </>
           )}
 
-          {/* ---------------- ADD ---------------- */}
           {activeTab === "add" && (
             <form ref={formRef} className="space-y-4" onSubmit={handleAddGuest}>
+              {/* Nama */}
               <input
                 name="name"
                 placeholder="Nama"
-                className="w-full p-2 rounded"
-                style={{
-                  background: "var(--bg-primary)",
-                  border: "1px solid var(--border-line)",
-                }}
+                className="
+        w-full p-2 rounded-lg
+        bg-white border border-neutral-200
+        text-sm text-neutral-700
+        placeholder:text-neutral-400
+        focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300
+      "
               />
 
               {/* Role */}
               <select
                 name="role"
-                className="w-full p-2 rounded"
-                style={{
-                  background: "var(--bg-primary)",
-                  border: "1px solid var(--border-line)",
-                }}
+                className="
+        w-full p-2 rounded-lg
+        bg-white border border-neutral-200
+        text-sm text-neutral-700
+        focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300
+      "
               >
                 <option value="">Pilih Role</option>
                 <option value="couple">Couple</option>
@@ -270,50 +309,68 @@ export default function AdminDashboardPage() {
 
               {/* Events */}
               <div className="space-y-2">
-                <label className="block font-medium">Pilih Event:</label>
+                <label className="block text-sm font-medium text-neutral-700">
+                  Pilih Event:
+                </label>
 
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name="event_akad" />
+                <label className="flex items-center gap-2 text-sm text-neutral-600">
+                  <input
+                    type="checkbox"
+                    name="event_akad"
+                    className="accent-emerald-600"
+                  />
                   Akad
                 </label>
 
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name="event_resepsi" />
+                <label className="flex items-center gap-2 text-sm text-neutral-600">
+                  <input
+                    type="checkbox"
+                    name="event_resepsi"
+                    className="accent-emerald-600"
+                  />
                   Resepsi
                 </label>
               </div>
 
+              {/* Submit */}
               <button
-                className="px-4 py-2 rounded active:scale-95"
-                style={{
-                  background: "var(--accent-1)",
-                  color: "var(--text-primary)",
-                }}
+                type="submit"
+                className="
+        px-4 py-2 rounded-lg
+        bg-emerald-600 text-white text-sm font-medium
+        hover:bg-emerald-700
+        transition active:scale-95
+      "
               >
                 Simpan
               </button>
             </form>
           )}
 
-          {/* ---------------- UPLOAD ---------------- */}
           {activeTab === "upload" && (
             <form className="space-y-4" onSubmit={handleUploadExcel}>
               <input
                 type="file"
                 accept=".xlsx,.xls"
-                className="w-full p-2 rounded"
-                style={{
-                  background: "var(--bg-primary)",
-                  border: "1px solid var(--border-line)",
-                }}
+                className="
+        w-full p-2 rounded-lg
+        bg-white border border-neutral-200
+        text-sm text-neutral-700
+        file:mr-4 file:px-4 file:py-2
+        file:rounded-md file:border-0
+        file:bg-sky-100 file:text-sky-700
+        hover:file:bg-sky-200
+      "
               />
 
               <button
-                className="px-4 py-2 rounded active:scale-95"
-                style={{
-                  background: "#a0c4ff",
-                  color: "black",
-                }}
+                type="submit"
+                className="
+        px-4 py-2 rounded-lg
+        bg-sky-600 text-white text-sm font-medium
+        hover:bg-sky-700
+        transition active:scale-95
+      "
               >
                 Upload
               </button>
@@ -321,41 +378,64 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
 /* ---------------- COMPONENTS ---------------- */
-function Card({ title, value, color }: any) {
+function Card({
+  title,
+  value,
+  valueClass,
+  icon,
+  iconColor = "text-sky-600",
+  iconBg = "bg-sky-100",
+}: {
+  title: string;
+  value: number | string;
+  valueClass?: string;
+  icon: ReactNode;
+  iconColor?: string;
+  iconBg?: string;
+}) {
   return (
-    <div
-      className="p-4 rounded-xl shadow flex flex-col"
-      style={{
-        background: "var(--accent-2)",
-        border: "1px solid var(--border-line)",
-      }}
-    >
-      <span style={{ color: "var(--text-secondary)" }}>{title}</span>
-      <span className="text-3xl font-bold" style={{ color }}>
-        {value}
-      </span>
+    <div className="p-4 rounded-xl shadow flex flex-col bg-neutral-50 space-y-3">
+      <div className="flex items-center gap-3">
+        {/* Icon wrapper */}
+        <div
+          className={`
+            p-2 rounded-lg
+            ${iconBg}
+            ${iconColor}
+          `}
+        >
+          {icon}
+        </div>
+
+        <span className="text-sm text-neutral-600">{title}</span>
+      </div>
+
+      <span className={`text-3xl font-bold ${valueClass}`}>{value}</span>
     </div>
   );
 }
 
 function GuestTable({ guests, parseJsonArray, copiedId, setCopiedId }: any) {
   return (
-    <div className="overflow-x-auto">
-      <table
-        className="w-full"
-        style={{ border: "1px solid var(--border-line)" }}
-      >
-        <thead>
-          <tr style={{ background: "var(--accent-2)" }}>
-            <th className="p-2">Nama</th>
-            <th className="p-2">Roles</th>
-            <th className="p-2">Events</th>
-            <th className="p-2 text-right">Link & Copy</th>
+    <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <table className="w-full text-sm">
+        <thead className="bg-neutral-100 border-b border-neutral-200">
+          <tr>
+            <th className="p-3 text-left font-medium text-neutral-700">Nama</th>
+            <th className="p-3 text-left font-medium text-neutral-700">
+              Roles
+            </th>
+            <th className="p-3 text-left font-medium text-neutral-700">
+              Events
+            </th>
+            <th className="p-3 text-right font-medium text-neutral-700">
+              Link & Copy
+            </th>
           </tr>
         </thead>
 
@@ -366,45 +446,54 @@ function GuestTable({ guests, parseJsonArray, copiedId, setCopiedId }: any) {
             const isCopied = copiedId === g.id;
 
             return (
-              <tr key={g.id} style={{ background: "var(--bg-primary)" }}>
-                <td className="p-2">{g.name}</td>
-                <td className="p-2">{parseJsonArray(g.roles).join(", ")}</td>
-                <td className="p-2">{parseJsonArray(g.events).join(", ")}</td>
+              <tr
+                key={g.id}
+                className="border-b border-neutral-200 bg-white hover:bg-neutral-50"
+              >
+                <td className="p-3 text-neutral-700">{g.name}</td>
 
-                <td className="p-2 flex items-center justify-between">
-                  <a
-                    href={fullLink}
-                    target="_blank"
-                    className="hover:underline"
-                    style={{ color: "#a0c4ff" }}
-                  >
-                    {fullLink}
-                  </a>
+                <td className="p-3 text-neutral-600">
+                  {parseJsonArray(g.roles).join(", ")}
+                </td>
 
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(fullLink);
-                      setCopiedId(g.id);
-                      setTimeout(() => setCopiedId(null), 1500);
-                    }}
-                    className="p-1 rounded active:scale-95"
-                    style={{
-                      background: "var(--accent-2)",
-                      border: "1px solid var(--border-line)",
-                    }}
-                  >
-                    {isCopied ? (
-                      <CheckIcon
-                        className="w-5 h-5"
-                        style={{ color: "var(--accent-light)" }}
-                      />
-                    ) : (
-                      <ClipboardIcon
-                        className="w-5 h-5"
-                        style={{ color: "var(--text-primary)" }}
-                      />
-                    )}
-                  </button>
+                <td className="p-3 text-neutral-600">
+                  {parseJsonArray(g.events).join(", ")}
+                </td>
+
+                <td >
+                  <div className="flex items-center justify-between gap-2">
+                    <a
+                      href={fullLink}
+                      target="_blank"
+                      className="
+                        text-sky-600 hover:underline
+                        truncate max-w-[220px]
+                      "
+                    >
+                      {fullLink}
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(fullLink);
+                        setCopiedId(g.id);
+                        setTimeout(() => setCopiedId(null), 1500);
+                      }}
+                      className="
+                        p-2 rounded-lg
+                        border border-neutral-200
+                        bg-neutral-50
+                        hover:bg-neutral-100
+                        transition active:scale-95
+                      "
+                    >
+                      {isCopied ? (
+                        <CheckIcon className="w-5 h-5 text-emerald-600" />
+                      ) : (
+                        <ClipboardIcon className="w-5 h-5 text-neutral-600" />
+                      )}
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
@@ -417,31 +506,39 @@ function GuestTable({ guests, parseJsonArray, copiedId, setCopiedId }: any) {
 
 function Pagination({ page, setPage, totalPages }: any) {
   return (
-    <div className="flex justify-between items-center mt-4">
+    <div className="flex justify-between items-center mt-4 text-sm">
       <button
         disabled={page <= 1}
         onClick={() => setPage((p: number) => p - 1)}
-        className="px-3 py-1 rounded disabled:opacity-30 active:scale-95"
-        style={{
-          background: "var(--accent-2)",
-          border: "1px solid var(--border-line)",
-        }}
+        className="
+          px-3 py-1 rounded-lg
+          border border-neutral-200
+          bg-neutral-50
+          text-neutral-700
+          hover:bg-neutral-100
+          disabled:opacity-30
+          transition active:scale-95
+        "
       >
         Prev
       </button>
 
-      <span style={{ color: "var(--text-secondary)" }}>
+      <span className="text-neutral-500">
         Page {page} / {totalPages || 1}
       </span>
 
       <button
         disabled={page >= totalPages}
         onClick={() => setPage((p: number) => p + 1)}
-        className="px-3 py-1 rounded disabled:opacity-30 active:scale-95"
-        style={{
-          background: "var(--accent-2)",
-          border: "1px solid var(--border-line)",
-        }}
+        className="
+          px-3 py-1 rounded-lg
+          border border-neutral-200
+          bg-neutral-50
+          text-neutral-700
+          hover:bg-neutral-100
+          disabled:opacity-30
+          transition active:scale-95
+        "
       >
         Next
       </button>
